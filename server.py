@@ -2072,6 +2072,126 @@ def activate_window(pid: int) -> str:
     except Exception as e:
         return f"激活窗口时出错: {str(e)}"
 
+@mcp.tool()
+def open_ai_urls(urls: list, user_contents: list = None) -> str:
+    """
+    打开指定的AI网站列表，并将对应的用户内容粘贴到各个网站中
+    
+    该函数可以同时打开多个AI网站（如豆包、通义千问、DeepSeek、KIMI等），并将对应的文本内容
+    自动复制到剪切板并粘贴到每个打开的网页中，方便快速与多个AI进行交互。
+    
+    Args:
+        urls (list): 要打开的AI网站URL地址列表
+        user_contents (list, optional): 需要粘贴到网站中的文本内容列表。
+            - 如果提供一个内容列表，将按顺序将不同内容粘贴到对应网站
+            - 如果提供单个字符串，将在所有网站中粘贴相同内容
+            - 如果不提供或为空，则仅打开网站不粘贴内容
+            默认值为None。
+        
+    Returns:
+        str: 操作结果描述，包括：
+            - 成功打开网站并粘贴内容时返回确认信息
+            - 出现错误时返回错误描述
+            
+    Example:
+        >>> open_ai_urls(["https://www.doubao.com/chat/", "https://www.tongyi.com/qianwen"], 
+                         ["请帮我写一篇关于人工智能的报告", "解释一下量子计算的基本原理"])
+        '已成功打开2个AI网站并写入对应内容'
+        
+        >>> open_ai_urls(["https://chat.deepseek.com/", "https://www.kimi.com/zh/"], 
+                         "请分析当前市场趋势")
+        '已成功打开2个AI网站并写入相同内容'
+        
+        >>> open_ai_urls(["https://www.doubao.com/chat/", "https://www.tongyi.com/qianwen"])
+        '已成功打开2个AI网站'
+        
+    Supported AI Websites:
+        - 豆包AI: https://www.doubao.com/chat/
+        - 豆包AI写作: https://www.doubao.com/chat/write
+        - 豆包AI生成图像: https://www.doubao.com/chat/create-image
+        - 豆包AI编程写代码: https://www.doubao.com/code/chat
+        - 豆包AI翻译: https://www.doubao.com/chat/translate
+        - 豆包AI智能体: https://www.doubao.com/chat/bot/discover
+        - 通义千问AI: https://www.tongyi.com/qianwen
+        - 通义千问AIPPT: https://www.tongyi.com/aippt
+        - 通义千问AI实时记录，会议记录，语音记录，AI翻译: https://www.tongyi.com/live/
+        - 通义千问音频视频速读: https://www.tongyi.com/discover/audioread
+        - 通义千问阅读文档，阅读助手: https://www.tongyi.com/read
+        - DeepSeek: https://chat.deepseek.com/
+        - KIMI: https://www.kimi.com/zh/
+        - KIMI生成PPT: https://www.kimi.com/kimiplus/slides
+        - KIMI医疗搜索: https://www.kimi.com/kimiplus/cu52bqh7l5gqdkncdg01
+    """
+    try:
+        # 检查输入参数
+        if not isinstance(urls, list):
+            return "参数错误：urls 必须是一个网址列表"
+        
+        if not urls:
+            return "错误：urls 列表不能为空"
+        
+        # 处理用户内容参数
+        contents = []
+        content_mode = "none"  # none, single, multiple
+        
+        if user_contents is None:
+            content_mode = "none"
+        elif isinstance(user_contents, str):
+            # 单个内容，应用到所有网站
+            content_mode = "single"
+            contents = [user_contents] * len(urls)
+        elif isinstance(user_contents, list):
+            if not user_contents:
+                content_mode = "none"
+            else:
+                content_mode = "multiple"
+                # 如果内容列表长度小于URL列表，用最后一个内容填充
+                contents = user_contents[:]
+                if len(contents) < len(urls):
+                    contents.extend([contents[-1]] * (len(urls) - len(contents)))
+                # 如果内容列表长度大于URL列表，截取前面的部分
+                contents = contents[:len(urls)]
+        else:
+            content_mode = "none"
+        
+        # 打开所有网站
+        opened_count = 0
+        pasted_count = 0
+        
+        for i, url in enumerate(urls):
+            # 打开网站
+            webbrowser.open_new(url)
+            opened_count += 1
+            
+            # 如果有内容需要粘贴
+            if content_mode in ["single", "multiple"] and i < len(contents) and contents[i]:
+                # 等待页面加载
+                time.sleep(1.5)
+                # 复制内容到剪切板
+                pyperclip.copy(contents[i])
+                # 模拟粘贴操作
+                pyautogui.hotkey('ctrl', 'v')
+                pasted_count += 1
+                # 等待粘贴完成
+                time.sleep(0.5)
+        
+        # 构造返回信息
+        result_msg = f"已成功打开{opened_count}个AI网站"
+        if pasted_count > 0:
+            if content_mode == "single":
+                result_msg += "并写入相同内容"
+            else:
+                result_msg += "并写入对应内容"
+            result_msg += "。若发现未生效，请手动粘贴一下。请手动按回车键确认。"
+        else:
+            result_msg += "。"
+            
+        return result_msg
+        
+    except Exception as e:
+        return f"打开AI网站时出错: {str(e)}"
+
+
 
 if __name__ == '__main__':
     #mcp.run()
