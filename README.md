@@ -227,6 +227,7 @@ python mcp_agent_and_server_start.py
 
 ### 网页类
 - "打开[网站名称]"
+- "在[网站名称]搜索[关键词]"
 - "阅读当前网页"
 - "提取网页关键信息"
 
@@ -256,6 +257,17 @@ python mcp_agent_and_server_start.py
 - "启动手势控制"
 - "停止手势控制"
 
+### 语音唤醒
+
+语音唤醒功能使用Vosk语音识别库，支持以下唤醒词组合：
+- "hello t"
+- "hello c"
+- "hello d"
+- "hello j"
+- "hello h"
+
+系统会使用正则表达式进行模糊匹配，识别到正确的唤醒词后会触发相应操作。
+
 ## 系统要求
 
 - Python 3.7+
@@ -266,8 +278,42 @@ python mcp_agent_and_server_start.py
 ## 注意事项
 
 1. 确保正确配置API密钥，否则语音识别和文本转语音功能将无法使用
-2. 首次运行可能需要下载语音模型文件（Vosk模型）
+2. 首次运行需要下载语音模型文件（Vosk模型）
 3. 部分功能可能需要管理员权限才能正常工作
+
+## 语音唤醒模型下载
+
+语音唤醒功能（voice_wake.py）需要Vosk模型支持。请按照以下步骤下载并配置模型：
+
+### 1. 下载Vosk模型
+
+访问Vosk官方网站下载小型英语模型：
+- 下载地址：[vosk-model-small-en-us-0.15](https://alphacephei.com/vosk/models)
+- 或者使用以下命令直接下载（Windows PowerShell）：
+
+```powershell
+# 创建模型目录（如果不存在）
+New-Item -ItemType Directory -Force -Path ".\vosk-model-small-en-us-0.15"
+
+# 下载模型文件
+Invoke-WebRequest -Uri "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip" -OutFile "vosk-model-small-en-us-0.15.zip"
+
+# 解压模型文件（需要安装7-Zip或使用Windows内置解压工具）
+Expand-Archive -Path "vosk-model-small-en-us-0.15.zip" -DestinationPath "."
+```
+
+### 2. 模型配置
+
+下载完成后，确保模型目录与voice_wake.py在同一文件夹下，或修改voice_wake.py中的模型路径：
+
+```python
+# 修改为您的实际模型路径
+model = Model('path/to/vosk-model-small-en-us-0.15')
+```
+
+### 3. 语音唤醒功能
+
+voice_wake.py使用正则表达式识别以"hello"开头的唤醒词，支持模糊匹配。当识别到正确的唤醒词组合时，将触发相应操作。
 
 ## 许可证
 
